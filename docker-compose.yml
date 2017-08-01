@@ -1,0 +1,101 @@
+version: '2'
+
+services:
+    master_db:
+        image: anassahmed/postgres:9.4
+        build: postgres
+        environment:
+            - POSTGRES_USER=odoo
+            - POSTGRES_PASSWORD=odoo
+        networks:
+            master_network:
+                aliases:
+                    - db
+            branch1_network:
+                aliases:
+                    - master_db
+            branch2_network:
+                aliases:
+                    - master_db
+    master_odoo:
+        image: docker.io/library/odoo:10.0
+        environment:
+            - POSTGRES_USER=odoo
+            - POSTGRES_PASSWORD=odoo
+        networks:
+            - master_network
+        ports:
+            - "8010:8069"
+        volumes:
+            - odoo_data:/var/lib/odoo
+    master_bucardo:
+        image: anassahmed/bucardo:9.4
+        build: bucardo
+        environment:
+            - BUCARDO_HOST=master_db
+            - BUCARDO_PORT=5432
+            - BUCARDO_DB=bucardo
+            - BUCARDO_USER=bucardo
+            - BUCARDO_PASSWORD=bucardo
+        networks:
+            master_network:
+            branch1_network:
+            branch2_network:
+    branch1_db:
+        image: anassahmed/postgres:9.4
+        build: postgres
+        environment:
+            - POSTGRES_USER=odoo
+            - POSTGRES_PASSWORD=odoo
+        networks:
+            master_network:
+            branch1_network:
+                aliases:
+                    - db
+        volumes:
+            - branch1_db_data:/var/lib/postgresql/data:rw
+    branch1_odoo:
+        image: docker.io/library/odoo:10.0
+        environment:
+            - POSTGRES_USER=odoo
+            - POSTGRES_PASSWORD=odoo
+        networks:
+            - branch1_network
+        ports:
+            - "8020:8069"
+        volumes:
+            - odoo_data:/var/lib/odoo
+    branch2_db:
+        image: anassahmed/postgres:9.4
+        build: postgres
+        environment:
+            - POSTGRES_USER=odoo
+            - POSTGRES_PASSWORD=odoo
+        networks:
+            master_network:
+            branch2_network:
+                aliases:
+                    - db
+        volumes:
+            - branch2_db_data:/var/lib/postgresql/data:rw
+    branch2_odoo:
+        image: docker.io/library/odoo:10.0
+        environment:
+            - POSTGRES_USER=odoo
+            - POSTGRES_PASSWORD=odoo
+        networks:
+            - branch2_network
+        ports:
+            - "8030:8069"
+        volumes:
+            - odoo_data:/var/lib/odoo
+
+networks:
+    master_network:
+    branch1_network:
+    branch2_network:
+
+volumes:
+    branch1_db_data:
+    branch2_db_data:
+    odoo_data:
